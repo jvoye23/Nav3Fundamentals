@@ -1,7 +1,8 @@
-package com.jvcs.myapplication.navigation
+package com.jvcs.myapplication.auth
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -9,50 +10,54 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.jvcs.myapplication.auth.AuthNavigation
-import com.jvcs.myapplication.screens.TodoDetailScreen
-import com.jvcs.myapplication.screens.TodoListScreen
-import com.jvcs.myapplication.screens.TodoNavigation
+import com.jvcs.myapplication.navigation.Route
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
 @Composable
-fun NavigationRoot(
+fun AuthNavigation(
+    onLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The rootBackStack with its NavDisplay will only navigate between features and not single screens
-    // The initial screens will be handled in different backStack for each feature
-    val rootBackStack = rememberNavBackStack(
+    val authBackStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
-                    subclass(Route.Auth::class, Route.Auth.serializer())
-                    subclass(Route.Todo::class, Route.Todo.serializer())
+                    subclass(Route.Auth.Login::class, Route.Auth.Login.serializer())
+                    subclass(Route.Auth.Register::class, Route.Auth.Register.serializer())
                 }
             }
         },
-        // if (isLoggedIn) Route.Todo else Route.Auth
-        Route.Auth
+
+        Route.Auth.Login
     )
+    val sharedAuthViewModel = viewModel { SharedAuthViewModel() }
     NavDisplay(
+        backStack = authBackStack,
         modifier = modifier,
-        backStack = rootBackStack,
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
 
         ),
         entryProvider = entryProvider {
-            entry<Route.Auth> {
-                AuthNavigation(
-                    onLogin = {
-                        rootBackStack.remove(Route.Auth)
-                        rootBackStack.add(Route.Todo)
+            entry<Route.Auth.Login> {
+                // A ViewModel is bound to the first entry of a feature
+                LoginScreen(
+                    viewModel = viewModel { LoginViewModel() },
+                    sharedViewModel = sharedAuthViewModel,
+                    onLogin = onLogin,
+                    onRegisterClick = {
+                        authBackStack.add(Route.Auth.Register)
                     }
+
                 )
             }
-            entry<Route.Todo> {
-                TodoNavigation()
+            entry<Route.Auth.Register> {
+                RegisterScreen(
+                    viewModel = viewModel { RegisterViewModel() },
+                    sharedViewModel = sharedAuthViewModel
+                )
             }
         }
     )
