@@ -46,6 +46,8 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.nav3)
             implementation(libs.jetbrains.lifecycle.viewmodel)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.material3.adaptive)
+            implementation(libs.material3.adaptive.layout)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

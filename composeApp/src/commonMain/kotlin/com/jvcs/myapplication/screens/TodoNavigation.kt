@@ -9,28 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberNavBackStack
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.savedstate.serialization.SavedStateConfiguration
-import com.jvcs.myapplication.auth.LoginScreen
-import com.jvcs.myapplication.auth.LoginViewModel
-import com.jvcs.myapplication.auth.RegisterScreen
-import com.jvcs.myapplication.auth.RegisterViewModel
-import com.jvcs.myapplication.auth.SharedAuthViewModel
 import com.jvcs.myapplication.navigation.Navigator
 import com.jvcs.myapplication.navigation.Route
 import com.jvcs.myapplication.navigation.TOP_LEVEL_DESTINATIONS
 import com.jvcs.myapplication.navigation.TodoNavigationBar
 import com.jvcs.myapplication.navigation.rememberNavigationState
 import com.jvcs.myapplication.navigation.toEntries
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
+import com.jvcs.myapplication.scenes.ListDetailScene
+import com.jvcs.myapplication.scenes.rememberListDetailSceneStrategy
 
 @Composable
 fun TodoNavigation(
@@ -61,9 +49,12 @@ fun TodoNavigation(
                 .fillMaxSize()
                 .padding(innerPadding),
             onBack = navigator::goBack,
+            sceneStrategy = rememberListDetailSceneStrategy(),
             entries = todoNavigationState.toEntries(
                 entryProvider {
-                    entry<Route.Todo.TodoList> {
+                    entry<Route.Todo.TodoList>(
+                        metadata = ListDetailScene.listPane()
+                    ) {
                         // A ViewModel is bound to the first entry of a feature
                         TodoListScreen(
                             onTodoClick = { todo ->
@@ -71,12 +62,16 @@ fun TodoNavigation(
                             }
                         )
                     }
-                    entry<Route.Todo.TodoDetail> { key ->
+                    entry<Route.Todo.TodoDetail>(
+                        metadata = ListDetailScene.detailPane()
+                    ) { key ->
                         TodoDetailScreen(
                             todo = key.todo
                         )
                     }
-                    entry<Route.Todo.TodoFavorites> {
+                    entry<Route.Todo.TodoFavorites>(
+                        metadata = ListDetailScene.listPane()
+                    ) {
                         TodoListScreen(
                             onTodoClick = { todo ->
                                 navigator.navigate(Route.Todo.TodoDetail(todo))
@@ -97,6 +92,5 @@ fun TodoNavigation(
         )
 
     }
-
 
 }
